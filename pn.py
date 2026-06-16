@@ -67,10 +67,14 @@ if missing_cols:
         f"Missing columns in input file:\n{missing_cols}"
     )
 
+# =====================================================
+# CREATE ANALYSIS DATAFRAME
+# =====================================================
+
 analysis_df = raw_df[required_columns].copy()
 
 # =====================================================
-# HANDLE NULLS
+# NUMERIC COLUMNS
 # =====================================================
 
 numeric_cols = [
@@ -87,12 +91,56 @@ numeric_cols = [
 ]
 
 for col in numeric_cols:
-    analysis_df[col] = (
-        pd.to_numeric(
-            analysis_df[col],
-            errors='coerce'
-        ).fillna(0)
+    analysis_df[col] = pd.to_numeric(
+        analysis_df[col],
+        errors='coerce'
+    ).fillna(0)
+
+# =====================================================
+# COMBINE ANDROID + IOS
+# GROUP BY CAMPAIGN ID + VARIANT
+# =====================================================
+
+analysis_df = (
+    analysis_df
+    .groupby(
+        ['Campaign ID', 'Variant'],
+        dropna=False,
+        as_index=False
     )
+    .agg({
+        'Campaign Name': 'first',
+        'Channel': 'first',
+        'Title': 'first',
+        'Message': 'first',
+        'Start Date': 'first',
+        'Start Time': 'first',
+        'Who query': 'first',
+        'Conversion Event': 'first',
+        'Run Date': 'first',
+
+        'Device': lambda x: ', '.join(
+            sorted(
+                set(
+                    str(v).strip()
+                    for v in x
+                    if pd.notna(v)
+                )
+            )
+        ),
+
+        'Total Sent(users)': 'sum',
+        'Total Viewed(users)': 'sum',
+        'Total Clicked(users)': 'sum',
+        'Total Delivered(users)': 'sum',
+        'Click through conversions': 'sum',
+        'Total control group count': 'sum',
+        'Total control group conversions': 'sum',
+        'Total control group revenue': 'sum',
+        'Influenced Conversions': 'sum',
+        'Influenced Revenue': 'sum'
+    })
+)
 
 # =====================================================
 # METRIC CALCULATIONS
@@ -176,6 +224,27 @@ analysis_df['Incremental Conversions'] = (
         - analysis_df['Control Rate']
     )
     * analysis_df['Total Viewed(users)']
+)
+
+analysis_df['Click through conversions %'] = np.where(
+    analysis_df['Total Viewed(users)'] > 0,
+    analysis_df['Click through conversions']
+    / analysis_df['Total Viewed(users)'] * 100,
+    0
+)
+
+analysis_df['Total control group conversions %'] = np.where(
+    analysis_df['Total control group count'] > 0,
+    analysis_df['Total control group conversions']
+    / analysis_df['Total control group count'] * 100,
+    0
+)
+
+analysis_df['Influenced Conversions %'] = np.where(
+    analysis_df['Total Viewed(users)'] > 0,
+    analysis_df['Influenced Conversions']
+    / analysis_df['Total Viewed(users)'] * 100,
+    0
 )
 
 # =====================================================
