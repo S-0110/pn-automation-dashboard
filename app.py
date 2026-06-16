@@ -3,6 +3,7 @@ import subprocess
 import os
 import sys
 import glob
+import base64
 import pandas as pd
 
 st.set_page_config(
@@ -10,6 +11,21 @@ st.set_page_config(
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
+)
+
+# ── Logo helper ───────────────────────────────────────────────────────────────
+def _logo_b64():
+    path = os.path.join(os.path.dirname(__file__), "logo.png")
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return ""
+
+_logo = _logo_b64()
+_logo_html = (
+    f'<img src="data:image/png;base64,{_logo}" '
+    f'style="height:56px;border-radius:10px;flex-shrink:0">'
+    if _logo else ""
 )
 
 # ── Global CSS ────────────────────────────────────────────────────────────────
@@ -21,7 +37,6 @@ section[data-testid="stSidebar"] {
     border-right: 1px solid #1d1f35;
 }
 
-/* Styled native metric cards */
 div[data-testid="metric-container"] {
     background: #161828;
     border: 1px solid #252845;
@@ -41,24 +56,18 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     font-weight: 700 !important;
 }
 
-/* Hero banner */
 .hero {
     background: linear-gradient(135deg, #1a053a 0%, #0d1547 55%, #091a3d 100%);
     border-radius: 14px;
     padding: 1.8rem 2.2rem;
     border: 1px solid #2a1f4a;
-    position: relative;
-    overflow: hidden;
     margin-bottom: 1.5rem;
 }
-.hero::after {
-    content: '📊';
-    position: absolute;
-    right: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 5rem;
-    opacity: 0.07;
+.hero-top {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 0.8rem;
 }
 .hero h1 {
     font-size: 1.75rem;
@@ -69,7 +78,7 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 .hero p {
     color: #7880a8;
     font-size: 0.84rem;
-    margin: 0 0 1rem 0;
+    margin: 0;
 }
 .pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .pill {
@@ -90,7 +99,6 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     color: #383d68;
 }
 
-/* Section labels */
 .section-label {
     font-size: 0.7rem;
     font-weight: 600;
@@ -100,7 +108,6 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     margin: 1.4rem 0 0.6rem 0;
 }
 
-/* Top category bar */
 .top-cat-box {
     background: #161828;
     border-left: 3px solid #6366f1;
@@ -112,7 +119,6 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     margin: 0.8rem 0;
 }
 
-/* Empty state */
 .empty-state {
     text-align: center;
     padding: 3rem;
@@ -126,27 +132,33 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 </style>""", unsafe_allow_html=True)
 
 # ── Hero Header ───────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <div class="hero">
-    <h1>Jumbo Marketing Analytics</h1>
-    <p>by Somya Mishra</p>
+    <div class="hero-top">
+        {_logo_html}
+        <div>
+            <h1>Jumbo Marketing Analytics</h1>
+            <p>by Somya Mishra</p>
+        </div>
+    </div>
     <div class="pills">
         <span class="pill pill-active">🔔 Push Notifications</span>
         <span class="pill pill-soon">📱 In-App &nbsp;· Soon</span>
-        <span class="pill pill-soon">💬 WhatsApp &nbsp;· Soon</span>
-        <span class="pill pill-soon">✉️ Email &nbsp;· Soon</span>
+        <span class="pill pill-soon">🗺️ Journeys &nbsp;· Soon</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
+    if _logo:
+        st.image("logo.png", width=60)
     st.markdown("### 📋 How to Use")
     st.markdown("""
-1. Upload your raw campaign `.xlsx` file
+1. Upload your raw campaign file (`.xlsx` or `.csv`)
 2. Click **Run Automation**
 3. Review summary metrics
-4. Download the full report
+4. Download report as **XLSX** or **CSV**
     """)
     st.divider()
     with st.expander("Required Columns"):
@@ -168,7 +180,7 @@ st.markdown('<p class="section-label">Upload</p>', unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader(
     "Upload",
-    type=["xlsx"],
+    type=["xlsx", "csv"],
     label_visibility="collapsed"
 )
 
@@ -176,7 +188,7 @@ if not uploaded_file:
     st.markdown("""
         <div class="empty-state">
             <div class="icon">📂</div>
-            <p>Upload a campaign Excel file to get started</p>
+            <p>Upload a campaign file (.xlsx or .csv) to get started</p>
         </div>
     """, unsafe_allow_html=True)
     st.stop()
@@ -190,6 +202,10 @@ with col_btn:
 uploaded_path = os.path.basename(uploaded_file.name)
 with open(uploaded_path, "wb") as f:
     f.write(uploaded_file.getbuffer())
+
+stem = os.path.splitext(uploaded_path)[0]
+output_file = stem + "_Analysis.xlsx"
+csv_file    = stem + "_Analysis.csv"
 
 if not run:
     st.stop()
@@ -218,9 +234,6 @@ if result.returncode != 0:
 if result.stdout:
     with st.expander("Logs", expanded=False):
         st.code(result.stdout)
-
-output_file = uploaded_path.replace(".xlsx", "_Analysis.xlsx")
-csv_file    = uploaded_path.replace(".xlsx", "_Analysis.csv")
 
 if not os.path.exists(output_file):
     st.error(f"Output file not found: {output_file}")
@@ -288,15 +301,30 @@ if os.path.exists(csv_file):
 
 # ── Download ──────────────────────────────────────────────────────────────────
 st.divider()
+st.markdown('<p class="section-label">Download Report</p>', unsafe_allow_html=True)
 
-with open(output_file, "rb") as f:
-    report_bytes = f.read()
+dl1, dl2 = st.columns(2)
 
-st.download_button(
-    label="📥  Download Full Report",
-    data=report_bytes,
-    file_name=os.path.basename(output_file),
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    use_container_width=True,
-    type="primary"
-)
+with dl1:
+    with open(output_file, "rb") as f:
+        xlsx_bytes = f.read()
+    st.download_button(
+        label="📥  Download as XLSX",
+        data=xlsx_bytes,
+        file_name=os.path.basename(output_file),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        type="primary"
+    )
+
+with dl2:
+    if os.path.exists(csv_file):
+        with open(csv_file, "rb") as f:
+            csv_bytes = f.read()
+        st.download_button(
+            label="📄  Download as CSV",
+            data=csv_bytes,
+            file_name=os.path.basename(csv_file),
+            mime="text/csv",
+            use_container_width=True
+        )

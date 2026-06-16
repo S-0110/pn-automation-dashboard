@@ -43,7 +43,10 @@ csv_output = (
 # =====================================================
 
 try:
-    raw_df = pd.read_excel(input_file)
+    if input_path.suffix.lower() == ".csv":
+        raw_df = pd.read_csv(input_file)
+    else:
+        raw_df = pd.read_excel(input_file)
 except Exception as e:
     print(f"Failed to read input file: {e}", file=sys.stderr)
     sys.exit(1)
