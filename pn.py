@@ -1,12 +1,6 @@
+
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
-
-
-# In[3]:
-
 
 import pandas as pd
 import numpy as np
@@ -63,7 +57,10 @@ required_columns = [
 # CHECK MISSING COLUMNS
 # =====================================================
 
-missing_cols = [col for col in required_columns if col not in raw_df.columns]
+missing_cols = [
+    col for col in required_columns
+    if col not in raw_df.columns
+]
 
 if missing_cols:
     raise ValueError(
@@ -94,8 +91,7 @@ for col in numeric_cols:
         pd.to_numeric(
             analysis_df[col],
             errors='coerce'
-        )
-        .fillna(0)
+        ).fillna(0)
     )
 
 # =====================================================
@@ -104,23 +100,21 @@ for col in numeric_cols:
 
 analysis_df['CTR'] = np.where(
     analysis_df['Total Viewed(users)'] > 0,
-    analysis_df['Total Clicked(users)'] /
-    analysis_df['Total Viewed(users)'],
+    analysis_df['Total Clicked(users)']
+    / analysis_df['Total Viewed(users)'],
     0
 )
 
 analysis_df['Total Converted'] = (
     analysis_df['Click through conversions']
-    +
-    analysis_df['Influenced Conversions']
+    + analysis_df['Influenced Conversions']
 )
 
 analysis_df['TC%'] = np.where(
     analysis_df['Total Viewed(users)'] > 0,
     (
         analysis_df['Total Converted']
-        /
-        analysis_df['Total Viewed(users)']
+        / analysis_df['Total Viewed(users)']
     ) * 100,
     0
 )
@@ -129,8 +123,7 @@ analysis_df['CTR%'] = np.where(
     analysis_df['Total Viewed(users)'] > 0,
     (
         analysis_df['Total Clicked(users)']
-        /
-        analysis_df['Total Viewed(users)']
+        / analysis_df['Total Viewed(users)']
     ) * 100,
     0
 )
@@ -139,8 +132,7 @@ analysis_df['Total CG Conv %'] = np.where(
     analysis_df['Total control group count'] > 0,
     (
         analysis_df['Total control group conversions']
-        /
-        analysis_df['Total control group count']
+        / analysis_df['Total control group count']
     ) * 100,
     0
 )
@@ -148,24 +140,21 @@ analysis_df['Total CG Conv %'] = np.where(
 analysis_df['Sent Rate'] = np.where(
     analysis_df['Total Sent(users)'] > 0,
     analysis_df['Total Converted']
-    /
-    analysis_df['Total Sent(users)'],
+    / analysis_df['Total Sent(users)'],
     0
 )
 
 analysis_df['Control Rate'] = np.where(
     analysis_df['Total control group count'] > 0,
     analysis_df['Total control group conversions']
-    /
-    analysis_df['Total control group count'],
+    / analysis_df['Total control group count'],
     0
 )
 
 analysis_df['Campaign Conversion Rate (CR)'] = np.where(
     analysis_df['Total Viewed(users)'] > 0,
     analysis_df['Total Converted']
-    /
-    analysis_df['Total Viewed(users)'],
+    / analysis_df['Total Viewed(users)'],
     0
 )
 
@@ -174,11 +163,9 @@ analysis_df['Relative Lift'] = np.where(
     (
         (
             analysis_df['Campaign Conversion Rate (CR)']
-            -
-            analysis_df['Control Rate']
+            - analysis_df['Control Rate']
         )
-        /
-        analysis_df['Control Rate']
+        / analysis_df['Control Rate']
     ) * 100,
     0
 )
@@ -186,11 +173,9 @@ analysis_df['Relative Lift'] = np.where(
 analysis_df['Incremental Conversions'] = (
     (
         analysis_df['Campaign Conversion Rate (CR)']
-        -
-        analysis_df['Control Rate']
+        - analysis_df['Control Rate']
     )
-    *
-    analysis_df['Total Viewed(users)']
+    * analysis_df['Total Viewed(users)']
 )
 
 # =====================================================
@@ -219,18 +204,24 @@ analysis_df['Segment'] = (
 # EXPORT TO EXCEL
 # =====================================================
 
-with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+with pd.ExcelWriter(
+    output_file,
+    engine='openpyxl'
+) as writer:
 
+    # -----------------------------------------
     # Analysis Sheet
+    # -----------------------------------------
+
     analysis_df.to_excel(
         writer,
         sheet_name='Analysis',
         index=False
     )
 
-    # =================================================
-    # CATEGORY SHEETS
-    # =================================================
+    # -----------------------------------------
+    # Category Sheets
+    # -----------------------------------------
 
     categories = (
         analysis_df['Category']
@@ -248,24 +239,17 @@ with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
 
         sheet_name = str(category)
 
-        # Remove invalid Excel characters
         sheet_name = re.sub(
             r'[:\\/*?\[\]]',
             '_',
             sheet_name
-        )
+        ).strip()
 
-        # Remove leading/trailing spaces
-        sheet_name = sheet_name.strip()
-
-        # Default if blank
         if not sheet_name:
             sheet_name = "Unknown"
 
-        # Excel max length
         sheet_name = sheet_name[:31]
 
-        # Handle duplicates
         original_name = sheet_name
         counter = 1
 
@@ -285,173 +269,136 @@ with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             index=False
         )
 
-        # =====================================================
-    # SUMMARY SHEET
-    # =====================================================
+    # -----------------------------------------
+    # Summary Sheet
+    # -----------------------------------------
 
-summary_sheet = "Summary"
+    summary_sheet = "Summary"
 
-# -----------------------------------------------------
-# 1. CATEGORY PERFORMANCE BASED ON CTR%
-# -----------------------------------------------------
+    category_ctr = pd.pivot_table(
+        analysis_df,
+        index='Category',
+        values='CTR%',
+        aggfunc='mean'
+    ).reset_index().sort_values(
+        by='CTR%',
+        ascending=False
+    )
 
-category_ctr = pd.pivot_table(
-    analysis_df,
-    index='Category',
-    values='CTR%',
-    aggfunc='mean'
-).reset_index()
+    category_tc = pd.pivot_table(
+        analysis_df,
+        index='Category',
+        values='TC%',
+        aggfunc='mean'
+    ).reset_index().sort_values(
+        by='TC%',
+        ascending=False
+    )
 
-category_ctr = category_ctr.sort_values(
-    by='CTR%',
-    ascending=False
-)
+    category_segment_tc = pd.pivot_table(
+        analysis_df,
+        index=['Category', 'Segment'],
+        values='TC%',
+        aggfunc='mean'
+    ).reset_index().sort_values(
+        by='TC%',
+        ascending=False
+    )
 
-# -----------------------------------------------------
-# 2. CATEGORY PERFORMANCE BASED ON TC%
-# -----------------------------------------------------
+    category_segment_ctr = pd.pivot_table(
+        analysis_df,
+        index=['Category', 'Segment'],
+        values='CTR%',
+        aggfunc='mean'
+    ).reset_index().sort_values(
+        by='CTR%',
+        ascending=False
+    )
 
-category_tc = pd.pivot_table(
-    analysis_df,
-    index='Category',
-    values='TC%',
-    aggfunc='mean'
-).reset_index()
+    start_row = 0
 
-category_tc = category_tc.sort_values(
-    by='TC%',
-    ascending=False
-)
+    pd.DataFrame(
+        [["Category Performance - CTR%"]],
+        columns=["Summary"]
+    ).to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-# -----------------------------------------------------
-# 3. CATEGORY + SEGMENT PERFORMANCE BASED ON TC%
-# -----------------------------------------------------
+    start_row += 2
 
-category_segment_tc = pd.pivot_table(
-    analysis_df,
-    index=[
-        'Category',
-        'Segment'
-    ],
-    values='TC%',
-    aggfunc='mean'
-).reset_index()
+    category_ctr.to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-category_segment_tc = category_segment_tc.sort_values(
-    by='TC%',
-    ascending=False
-)
+    start_row += len(category_ctr) + 4
 
-# -----------------------------------------------------
-# 4. CATEGORY + SEGMENT PERFORMANCE BASED ON CTR%
-# -----------------------------------------------------
+    pd.DataFrame(
+        [["Category Performance - TC%"]],
+        columns=["Summary"]
+    ).to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-category_segment_ctr = pd.pivot_table(
-    analysis_df,
-    index=[
-        'Category',
-        'Segment'
-    ],
-    values='CTR%',
-    aggfunc='mean'
-).reset_index()
+    start_row += 2
 
-category_segment_ctr = category_segment_ctr.sort_values(
-    by='CTR%',
-    ascending=False
-)
+    category_tc.to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-# -----------------------------------------------------
-# WRITE ALL TABLES TO SUMMARY SHEET
-# -----------------------------------------------------
+    start_row += len(category_tc) + 4
 
-start_row = 0
+    pd.DataFrame(
+        [["Category + Segment Performance - TC%"]],
+        columns=["Summary"]
+    ).to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-# Title 1
-pd.DataFrame(
-    [["Category Performance - CTR%"]],
-    columns=["Summary"]
-).to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
+    start_row += 2
 
-start_row += 2
+    category_segment_tc.to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-category_ctr.to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
+    start_row += len(category_segment_tc) + 4
 
-start_row += len(category_ctr) + 4
+    pd.DataFrame(
+        [["Category + Segment Performance - CTR%"]],
+        columns=["Summary"]
+    ).to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-# Title 2
-pd.DataFrame(
-    [["Category Performance - TC%"]],
-    columns=["Summary"]
-).to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
+    start_row += 2
 
-start_row += 2
+    category_segment_ctr.to_excel(
+        writer,
+        sheet_name=summary_sheet,
+        startrow=start_row,
+        index=False
+    )
 
-category_tc.to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
-
-start_row += len(category_tc) + 4
-
-# Title 3
-pd.DataFrame(
-    [["Category + Segment Performance - TC%"]],
-    columns=["Summary"]
-).to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
-
-start_row += 2
-
-category_segment_tc.to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
-
-start_row += len(category_segment_tc) + 4
-
-# Title 4
-pd.DataFrame(
-    [["Category + Segment Performance - CTR%"]],
-    columns=["Summary"]
-).to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
-
-start_row += 2
-
-category_segment_ctr.to_excel(
-    writer,
-    sheet_name=summary_sheet,
-    startrow=start_row,
-    index=False
-)
 # =====================================================
 # FORMAT EXCEL
 # =====================================================
@@ -462,11 +409,11 @@ for sheet in wb.sheetnames:
 
     ws = wb[sheet]
 
-    # Bold first row
+    # Bold header row
     for cell in ws[1]:
         cell.font = Font(bold=True)
 
-    # Auto column width
+    # Auto width
     for column_cells in ws.columns:
 
         max_length = max(
@@ -476,7 +423,10 @@ for sheet in wb.sheetnames:
             for cell in column_cells
         )
 
-        adjusted_width = min(max_length + 5, 50)
+        adjusted_width = min(
+            max_length + 5,
+            50
+        )
 
         ws.column_dimensions[
             column_cells[0].column_letter
@@ -488,10 +438,4 @@ print("=" * 50)
 print("Automation completed successfully!")
 print(f"Output saved as: {output_file}")
 print("=" * 50)
-
-
-# In[ ]:
-
-
-
 
