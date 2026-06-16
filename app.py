@@ -233,7 +233,13 @@ with st.spinner("Running analysis…"):
 
 if result.returncode != 0:
     st.error("❌  Automation Failed")
-    st.code(result.stderr)
+    lines = result.stderr.strip().splitlines()
+    error_start = 0
+    for i, line in enumerate(lines):
+        if line and not line.startswith(" ") and not line.startswith("Traceback"):
+            error_start = i
+    error_msg = "\n".join(lines[error_start:]).strip() if lines else result.stderr.strip()
+    st.warning(error_msg)
     st.stop()
 
 if result.stdout:
