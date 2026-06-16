@@ -11,8 +11,35 @@ from openpyxl.styles import Font
 # FILE PATHS
 # =====================================================
 
-input_file = "1_to_10.xlsx"
-output_file = "Campaign_Analysis_Output.xlsx"
+# =====================================================
+# FILE PICKER + OUTPUT PATHS
+# =====================================================
+
+from pathlib import Path
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+
+Tk().withdraw()
+
+input_file = askopenfilename(
+    title="Select Input Excel File",
+    filetypes=[("Excel Files", "*.xlsx *.xls")]
+)
+
+if not input_file:
+    raise SystemExit("No file selected.")
+
+input_path = Path(input_file)
+
+excel_output = (
+    input_path.parent /
+    f"{input_path.stem}_Analysis.xlsx"
+)
+
+csv_output = (
+    input_path.parent /
+    f"{input_path.stem}_Analysis.csv"
+)
 
 # =====================================================
 # LOAD RAW DATA
@@ -268,15 +295,25 @@ analysis_df['Segment'] = (
     .str[-1]
 )
 
+
+# =====================================================
+# EXPORT ANALYSIS TO CSV
+# =====================================================
+
+analysis_df.to_csv(
+    csv_output,
+    index=False,
+    encoding="utf-8-sig"
+)
 # =====================================================
 # EXPORT TO EXCEL
 # =====================================================
 
 with pd.ExcelWriter(
-    output_file,
+    excel_output,
     engine='openpyxl'
 ) as writer:
-
+    
     analysis_df.to_excel(
         writer,
         sheet_name='Analysis',
@@ -402,7 +439,7 @@ with pd.ExcelWriter(
 # FORMAT EXCEL
 # =====================================================
 
-wb = load_workbook(output_file)
+wb = load_workbook(excel_output)
 
 # Move Summary sheet to first position
 if "Summary" in wb.sheetnames:
@@ -435,4 +472,4 @@ for sheet in wb.sheetnames:
             column_cells[0].column_letter
         ].width = adjusted_width
 
-wb.save(output_file)
+wb.save(excel_output)
