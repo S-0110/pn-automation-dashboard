@@ -24,7 +24,8 @@ def _logo_b64():
 _logo = _logo_b64()
 _logo_html = (
     f'<img src="data:image/png;base64,{_logo}" '
-    f'style="height:56px;border-radius:10px;flex-shrink:0">'
+    f'style="height:56px;border-radius:12px;flex-shrink:0;'
+    f'background:#fff;padding:6px;box-shadow:0 0 0 1.5px rgba(255,255,255,0.15);">'
     if _logo else ""
 )
 
@@ -193,11 +194,15 @@ if not uploaded_file:
     """, unsafe_allow_html=True)
     st.stop()
 
-col_name, col_btn = st.columns([4, 1])
-with col_name:
-    st.success(f"✅  {uploaded_file.name}")
-with col_btn:
-    run = st.button("▶  Run", use_container_width=True, type="primary")
+st.markdown(f"""
+    <div style="display:flex;align-items:center;gap:0.75rem;
+                background:#0e1f14;border:1px solid #1a3a22;
+                border-radius:8px;padding:0.6rem 1rem;margin-bottom:0.5rem">
+        <span style="color:#4ade80;font-size:1rem">✅</span>
+        <span style="color:#86efac;font-size:0.9rem;font-weight:500">{uploaded_file.name}</span>
+    </div>
+""", unsafe_allow_html=True)
+run = st.button("▶  Run Automation", use_container_width=True, type="primary")
 
 uploaded_path = os.path.basename(uploaded_file.name)
 with open(uploaded_path, "wb") as f:
