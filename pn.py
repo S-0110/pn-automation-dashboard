@@ -285,9 +285,9 @@ with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             index=False
         )
 
+        # =====================================================
+    # SUMMARY SHEET
     # =====================================================
-# SUMMARY SHEET
-# =====================================================
 
 summary_sheet = "Summary"
 
