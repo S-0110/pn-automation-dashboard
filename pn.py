@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -278,19 +277,11 @@ with pd.ExcelWriter(
     engine='openpyxl'
 ) as writer:
 
-    # -----------------------------------------
-    # Analysis Sheet
-    # -----------------------------------------
-
     analysis_df.to_excel(
         writer,
         sheet_name='Analysis',
         index=False
     )
-
-    # -----------------------------------------
-    # Category Sheets
-    # -----------------------------------------
 
     categories = (
         analysis_df['Category']
@@ -339,132 +330,71 @@ with pd.ExcelWriter(
         )
 
     # -----------------------------------------
-    # Summary Sheet
+    # CATEGORY OVERVIEW SUMMARY
     # -----------------------------------------
 
     summary_sheet = "Summary"
 
-    category_ctr = pd.pivot_table(
-        analysis_df,
-        index='Category',
-        values='CTR%',
-        aggfunc='mean'
-    ).reset_index().sort_values(
-        by='CTR%',
+    category_summary = (
+        analysis_df
+        .groupby('Category')
+        .agg(
+            Campaigns=('Campaign ID', 'nunique'),
+            Total_Sent=('Total Sent(users)', 'sum'),
+            Total_Viewed=('Total Viewed(users)', 'sum'),
+            Total_Clicked=('Total Clicked(users)', 'sum'),
+            Total_Converted=('Total Converted', 'sum'),
+            Influenced_Revenue=('Influenced Revenue', 'sum'),
+            Incremental_Conversions=('Incremental Conversions', 'sum')
+        )
+        .reset_index()
+    )
+
+    category_summary['View Rate %'] = np.where(
+        category_summary['Total_Sent'] > 0,
+        category_summary['Total_Viewed']
+        / category_summary['Total_Sent'] * 100,
+        0
+    )
+
+    category_summary['CTR %'] = np.where(
+        category_summary['Total_Viewed'] > 0,
+        category_summary['Total_Clicked']
+        / category_summary['Total_Viewed'] * 100,
+        0
+    )
+
+    category_summary['Conversion Rate %'] = np.where(
+        category_summary['Total_Viewed'] > 0,
+        category_summary['Total_Converted']
+        / category_summary['Total_Viewed'] * 100,
+        0
+    )
+
+    category_summary = category_summary.sort_values(
+        by='Total_Converted',
         ascending=False
     )
 
-    category_tc = pd.pivot_table(
-        analysis_df,
-        index='Category',
-        values='TC%',
-        aggfunc='mean'
-    ).reset_index().sort_values(
-        by='TC%',
-        ascending=False
-    )
+    category_summary = category_summary[
+        [
+            'Category',
+            'Campaigns',
+            'Total_Sent',
+            'Total_Viewed',
+            'View Rate %',
+            'Total_Clicked',
+            'CTR %',
+            'Total_Converted',
+            'Conversion Rate %',
+            'Influenced_Revenue',
+            'Incremental_Conversions'
+        ]
+    ]
 
-    category_segment_tc = pd.pivot_table(
-        analysis_df,
-        index=['Category', 'Segment'],
-        values='TC%',
-        aggfunc='mean'
-    ).reset_index().sort_values(
-        by='TC%',
-        ascending=False
-    )
-
-    category_segment_ctr = pd.pivot_table(
-        analysis_df,
-        index=['Category', 'Segment'],
-        values='CTR%',
-        aggfunc='mean'
-    ).reset_index().sort_values(
-        by='CTR%',
-        ascending=False
-    )
-
-    start_row = 0
-
-    pd.DataFrame(
-        [["Category Performance - CTR%"]],
-        columns=["Summary"]
-    ).to_excel(
+    category_summary.to_excel(
         writer,
         sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
-
-    start_row += 2
-
-    category_ctr.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
-
-    start_row += len(category_ctr) + 4
-
-    pd.DataFrame(
-        [["Category Performance - TC%"]],
-        columns=["Summary"]
-    ).to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
-
-    start_row += 2
-
-    category_tc.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
-
-    start_row += len(category_tc) + 4
-
-    pd.DataFrame(
-        [["Category + Segment Performance - TC%"]],
-        columns=["Summary"]
-    ).to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
-
-    start_row += 2
-
-    category_segment_tc.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
-
-    start_row += len(category_segment_tc) + 4
-
-    pd.DataFrame(
-        [["Category + Segment Performance - CTR%"]],
-        columns=["Summary"]
-    ).to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
-
-    start_row += 2
-
-    category_segment_ctr.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
         index=False
     )
 
@@ -474,15 +404,40 @@ with pd.ExcelWriter(
 
 wb = load_workbook(output_file)
 
+if "Summary" in wb.sheetnames:
+
+    summary_ws = wb["Summary"]
+
+    for row in range(2, summary_ws.max_row + 1):
+
+        category_name = summary_ws.cell(
+            row=row,
+            column=1
+        ).value
+
+        if (
+            category_name is not None
+            and category_name in wb.sheetnames
+        ):
+
+            summary_ws.cell(
+                row=row,
+                column=1
+            ).hyperlink = f"#{category_name}!A1"
+
+            summary_ws.cell(
+                row=row,
+                column=1
+            ).style = "Hyperlink"
+
 for sheet in wb.sheetnames:
 
     ws = wb[sheet]
+    ws.freeze_panes = "A2"
 
-    # Bold header row
     for cell in ws[1]:
         cell.font = Font(bold=True)
 
-    # Auto width
     for column_cells in ws.columns:
 
         max_length = max(
@@ -507,4 +462,3 @@ print("=" * 50)
 print("Automation completed successfully!")
 print(f"Output saved as: {output_file}")
 print("=" * 50)
-
