@@ -4,6 +4,7 @@ import os
 import sys
 import glob
 import base64
+import ast
 import pandas as pd
 
 st.set_page_config(
@@ -232,14 +233,59 @@ with st.spinner("Running analysis…"):
     )
 
 if result.returncode != 0:
+    stderr = result.stderr.strip()
     st.error("❌  Automation Failed")
-    lines = result.stderr.strip().splitlines()
-    error_start = 0
-    for i, line in enumerate(lines):
-        if line and not line.startswith(" ") and not line.startswith("Traceback"):
-            error_start = i
-    error_msg = "\n".join(lines[error_start:]).strip() if lines else result.stderr.strip()
-    st.warning(error_msg)
+
+    if "Missing columns in input file:" in stderr:
+        missing = []
+        bracket = stderr.find("[")
+        if bracket != -1:
+            try:
+                missing = ast.literal_eval(stderr[bracket:])
+            except Exception:
+                pass
+
+        all_required = 25  # total required columns in pn.py
+        likely_wrong_file = len(missing) >= all_required - 2
+
+        if likely_wrong_file:
+            st.markdown(
+                "**What happened:** This file doesn't look like a campaign export — "
+                "none of the required columns were found."
+            )
+            st.markdown(
+                "**Why:** The automation expects a Push Notification campaign export "
+                "with specific column names. A different report type won't work."
+            )
+            st.markdown("**What to fix:** Export the Push Notification campaigns report from your platform and re-upload.")
+        else:
+            st.markdown(
+                f"**What happened:** Your file is missing **{len(missing)}** required column(s)."
+            )
+            st.markdown(
+                "**Why:** The automation needs exact column names to process data. "
+                "Columns that are renamed or missing will block processing."
+            )
+            st.markdown("**What to fix:** Add or rename these columns in your spreadsheet:")
+            cols_md = "  \n".join(f"- `{c}`" for c in missing)
+            st.markdown(cols_md)
+
+    elif "Failed to read input file" in stderr:
+        st.markdown("**What happened:** The file could not be opened.")
+        st.markdown(
+            "**Why:** The file may be corrupted, password-protected, "
+            "or saved in an incompatible format."
+        )
+        st.markdown("**What to fix:** Upload a valid `.xlsx` or `.csv` file without password protection.")
+
+    else:
+        lines = stderr.splitlines()
+        error_start = 0
+        for i, line in enumerate(lines):
+            if line and not line.startswith(" ") and not line.startswith("Traceback"):
+                error_start = i
+        st.warning("\n".join(lines[error_start:]).strip() or stderr)
+
     st.stop()
 
 if result.stdout:
