@@ -16,18 +16,10 @@ from openpyxl.styles import Font
 # =====================================================
 
 from pathlib import Path
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+import sys
 
-Tk().withdraw()
-
-input_file = askopenfilename(
-    title="Select Input Excel File",
-    filetypes=[("Excel Files", "*.xlsx *.xls")]
-)
-
-if not input_file:
-    raise SystemExit("No file selected.")
+# Streamlit passes the uploaded file path
+input_file = sys.argv[1]
 
 input_path = Path(input_file)
 
@@ -40,6 +32,7 @@ csv_output = (
     input_path.parent /
     f"{input_path.stem}_Analysis.csv"
 )
+
 
 # =====================================================
 # LOAD RAW DATA
