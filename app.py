@@ -33,9 +33,9 @@ _logo_html = (
 st.markdown("""<style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-header {background: transparent !important; border: none !important;}
-[data-testid="stToolbar"] {visibility: hidden;}
 [data-testid="stDecoration"] {display: none;}
+[data-testid="stDeployButton"] {display: none;}
+header {background: transparent !important; border: none !important; box-shadow: none !important;}
 
 section[data-testid="stSidebar"] {
     background: #11131f;
