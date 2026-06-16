@@ -285,86 +285,173 @@ with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             index=False
         )
 
-    # =================================================
-    # SUMMARY SHEET
-    # =================================================
+    # =====================================================
+# SUMMARY SHEET
+# =====================================================
 
-    summary_sheet = "Summary"
+summary_sheet = "Summary"
 
-    ctr_pivot = pd.pivot_table(
-        analysis_df,
-        index=[
-            'Campaign ID',
-            'Title',
-            'Message',
-            'Variant'
-        ],
-        values='CTR%',
-        aggfunc='mean'
-    ).reset_index()
+# -----------------------------------------------------
+# 1. CATEGORY PERFORMANCE BASED ON CTR%
+# -----------------------------------------------------
 
-    tc_pivot = pd.pivot_table(
-        analysis_df,
-        index=[
-            'Campaign ID',
-            'Title',
-            'Message',
-            'Variant'
-        ],
-        values='TC%',
-        aggfunc='mean'
-    ).reset_index()
+category_ctr = pd.pivot_table(
+    analysis_df,
+    index='Category',
+    values='CTR%',
+    aggfunc='mean'
+).reset_index()
 
-    segment_ctr = pd.pivot_table(
-        analysis_df,
-        index='Segment',
-        values='CTR%',
-        aggfunc='mean'
-    ).reset_index()
+category_ctr = category_ctr.sort_values(
+    by='CTR%',
+    ascending=False
+)
 
-    segment_tc = pd.pivot_table(
-        analysis_df,
-        index='Segment',
-        values='TC%',
-        aggfunc='mean'
-    ).reset_index()
+# -----------------------------------------------------
+# 2. CATEGORY PERFORMANCE BASED ON TC%
+# -----------------------------------------------------
 
-    start_row = 0
+category_tc = pd.pivot_table(
+    analysis_df,
+    index='Category',
+    values='TC%',
+    aggfunc='mean'
+).reset_index()
 
-    ctr_pivot.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
+category_tc = category_tc.sort_values(
+    by='TC%',
+    ascending=False
+)
 
-    start_row += len(ctr_pivot) + 4
+# -----------------------------------------------------
+# 3. CATEGORY + SEGMENT PERFORMANCE BASED ON TC%
+# -----------------------------------------------------
 
-    tc_pivot.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
+category_segment_tc = pd.pivot_table(
+    analysis_df,
+    index=[
+        'Category',
+        'Segment'
+    ],
+    values='TC%',
+    aggfunc='mean'
+).reset_index()
 
-    start_row += len(tc_pivot) + 4
+category_segment_tc = category_segment_tc.sort_values(
+    by='TC%',
+    ascending=False
+)
 
-    segment_ctr.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
+# -----------------------------------------------------
+# 4. CATEGORY + SEGMENT PERFORMANCE BASED ON CTR%
+# -----------------------------------------------------
 
-    start_row += len(segment_ctr) + 4
+category_segment_ctr = pd.pivot_table(
+    analysis_df,
+    index=[
+        'Category',
+        'Segment'
+    ],
+    values='CTR%',
+    aggfunc='mean'
+).reset_index()
 
-    segment_tc.to_excel(
-        writer,
-        sheet_name=summary_sheet,
-        startrow=start_row,
-        index=False
-    )
+category_segment_ctr = category_segment_ctr.sort_values(
+    by='CTR%',
+    ascending=False
+)
 
+# -----------------------------------------------------
+# WRITE ALL TABLES TO SUMMARY SHEET
+# -----------------------------------------------------
+
+start_row = 0
+
+# Title 1
+pd.DataFrame(
+    [["Category Performance - CTR%"]],
+    columns=["Summary"]
+).to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
+
+start_row += 2
+
+category_ctr.to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
+
+start_row += len(category_ctr) + 4
+
+# Title 2
+pd.DataFrame(
+    [["Category Performance - TC%"]],
+    columns=["Summary"]
+).to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
+
+start_row += 2
+
+category_tc.to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
+
+start_row += len(category_tc) + 4
+
+# Title 3
+pd.DataFrame(
+    [["Category + Segment Performance - TC%"]],
+    columns=["Summary"]
+).to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
+
+start_row += 2
+
+category_segment_tc.to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
+
+start_row += len(category_segment_tc) + 4
+
+# Title 4
+pd.DataFrame(
+    [["Category + Segment Performance - CTR%"]],
+    columns=["Summary"]
+).to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
+
+start_row += 2
+
+category_segment_ctr.to_excel(
+    writer,
+    sheet_name=summary_sheet,
+    startrow=start_row,
+    index=False
+)
 # =====================================================
 # FORMAT EXCEL
 # =====================================================
