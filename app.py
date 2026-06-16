@@ -32,6 +32,10 @@ _logo_html = (
 # ── Global CSS ────────────────────────────────────────────────────────────────
 st.markdown("""<style>
 #MainMenu, header, footer {visibility: hidden;}
+[data-testid="stSidebarCollapsedControl"] {
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
 
 section[data-testid="stSidebar"] {
     background: #11131f;
