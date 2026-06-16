@@ -64,22 +64,34 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     border: 1px solid #2a1f4a;
     margin-bottom: 1.5rem;
 }
-.hero-top {
+.hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.4rem 0;
+    background: linear-gradient(90deg, #ffffff 0%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+}
+.hero-byline {
     display: flex;
     align-items: center;
-    gap: 1.2rem;
-    margin-bottom: 0.8rem;
-}
-.hero h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #fff;
-    margin: 0 0 0.2rem 0;
-}
-.hero p {
-    color: #7880a8;
-    font-size: 0.84rem;
+    gap: 0.5rem;
+    color: #6b7299;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     margin: 0;
+}
+.byline-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    flex-shrink: 0;
 }
 .pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .pill {
@@ -133,14 +145,14 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 </style>""", unsafe_allow_html=True)
 
 # ── Hero Header ───────────────────────────────────────────────────────────────
-st.markdown(f"""
+st.markdown("""
 <div class="hero">
-    <div class="hero-top">
-        {_logo_html}
-        <div>
-            <h1>Jumbo Marketing Analytics</h1>
-            <p>by Somya Mishra</p>
-        </div>
+    <div style="margin-bottom:0.6rem">
+        <h1>Jumbo Marketing Analytics</h1>
+        <p class="hero-byline">
+            <span class="byline-dot"></span>
+            Built by Somya Mishra
+        </p>
     </div>
     <div class="pills">
         <span class="pill pill-active">🔔 Push Notifications</span>
