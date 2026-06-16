@@ -67,7 +67,7 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 .hero h1 {
     font-size: 2rem;
     font-weight: 800;
-    margin: 0 0 0.4rem 0;
+    margin: 0 0 0.05rem 0;
     background: linear-gradient(90deg, #ffffff 0%, #c4b5fd 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -78,7 +78,7 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     color: #7880a8;
     font-size: 0.85rem;
     font-weight: 400;
-    margin: 0;
+    margin: 0 0 0.9rem 0;
 }
 .pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .pill {
@@ -134,7 +134,7 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 # ── Hero Header ───────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="hero">
-    <div style="margin-bottom:0.6rem">
+    <div>
         <h1>Jumbo Marketing Analytics</h1>
         <p class="hero-byline">by Somya Mishra</p>
     </div>
