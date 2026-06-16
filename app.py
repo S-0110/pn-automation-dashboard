@@ -141,7 +141,6 @@ st.markdown("""
 <div class="hero">
     <div>
         <h1>Jumbo Marketing Analytics</h1>
-        <p class="hero-byline">by Somya Mishra</p>
     </div>
     <div class="pills">
         <span class="pill pill-active">🔔 Push Notifications</span>
@@ -155,14 +154,13 @@ st.markdown("""
 with st.sidebar:
     if _logo:
         st.image("logo.png", width=60)
-    st.markdown("### 📋 How to Use")
-    st.markdown("""
+    with st.expander("📋 How to Use"):
+        st.markdown("""
 1. Upload your raw campaign file (`.xlsx` or `.csv`)
 2. Click **Run Automation**
 3. Review summary metrics
 4. Download report as **XLSX** or **CSV**
-    """)
-    st.divider()
+        """)
     with st.expander("Required Columns"):
         st.markdown("""
 - Campaign Name / ID
@@ -174,8 +172,10 @@ with st.sidebar:
 - Control group metrics
 - Influenced Conversions / Revenue
         """)
-    st.divider()
-    st.caption("Push Notifications · v1.0")
+    st.markdown(
+        '<div style="position:fixed;bottom:1.2rem;font-size:0.75rem;color:#454870;">by Somya Mishra</div>',
+        unsafe_allow_html=True
+    )
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 st.markdown('<p class="section-label">Upload</p>', unsafe_allow_html=True)
@@ -250,33 +250,23 @@ if result.returncode != 0:
 
         if likely_wrong_file:
             st.markdown(
-                "**What happened:** This file doesn't look like a campaign export — "
-                "none of the required columns were found."
+                "This doesn't look like a Push Notification campaign export — "
+                "none of the expected columns were found. "
+                "Please export the Push Notification campaigns report from your platform and re-upload."
             )
-            st.markdown(
-                "**Why:** The automation expects a Push Notification campaign export "
-                "with specific column names. A different report type won't work."
-            )
-            st.markdown("**What to fix:** Export the Push Notification campaigns report from your platform and re-upload.")
         else:
             st.markdown(
-                f"**What happened:** Your file is missing **{len(missing)}** required column(s)."
+                f"Your file is missing {len(missing)} required column(s). "
+                "Rename or add these columns in your spreadsheet before re-uploading:"
             )
-            st.markdown(
-                "**Why:** The automation needs exact column names to process data. "
-                "Columns that are renamed or missing will block processing."
-            )
-            st.markdown("**What to fix:** Add or rename these columns in your spreadsheet:")
             cols_md = "  \n".join(f"- `{c}`" for c in missing)
             st.markdown(cols_md)
 
     elif "Failed to read input file" in stderr:
-        st.markdown("**What happened:** The file could not be opened.")
         st.markdown(
-            "**Why:** The file may be corrupted, password-protected, "
-            "or saved in an incompatible format."
+            "The file could not be opened. It may be corrupted, password-protected, "
+            "or in an unsupported format. Upload a valid `.xlsx` or `.csv` file and try again."
         )
-        st.markdown("**What to fix:** Upload a valid `.xlsx` or `.csv` file without password protection.")
 
     else:
         lines = stderr.splitlines()
