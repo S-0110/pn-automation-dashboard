@@ -19,6 +19,10 @@ from pathlib import Path
 import sys
 
 # Streamlit passes the uploaded file path
+if len(sys.argv) < 2:
+    print("Usage: pn.py <input_file.xlsx>", file=sys.stderr)
+    sys.exit(1)
+
 input_file = sys.argv[1]
 
 input_path = Path(input_file)
@@ -38,7 +42,11 @@ csv_output = (
 # LOAD RAW DATA
 # =====================================================
 
-raw_df = pd.read_excel(input_file)
+try:
+    raw_df = pd.read_excel(input_file)
+except Exception as e:
+    print(f"Failed to read input file: {e}", file=sys.stderr)
+    sys.exit(1)
 
 # =====================================================
 # REQUIRED COLUMNS

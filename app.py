@@ -19,7 +19,7 @@ uploaded_file = st.file_uploader(
 if uploaded_file:
 
     # Save uploaded file using original filename
-    uploaded_path = uploaded_file.name
+    uploaded_path = os.path.basename(uploaded_file.name)
 
     with open(uploaded_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
@@ -32,13 +32,13 @@ if uploaded_file:
         for file in glob.glob("*_Analysis.xlsx"):
             try:
                 os.remove(file)
-            except:
+            except OSError:
                 pass
 
         for file in glob.glob("*_Analysis.csv"):
             try:
                 os.remove(file)
-            except:
+            except OSError:
                 pass
 
         with st.spinner("Running Automation..."):
@@ -70,13 +70,14 @@ if uploaded_file:
             st.success("Report Generated Successfully")
 
             with open(output_file, "rb") as f:
+                report_bytes = f.read()
 
-                st.download_button(
-                    label="📥 Download Report",
-                    data=f,
-                    file_name=os.path.basename(output_file),
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+            st.download_button(
+                label="📥 Download Report",
+                data=report_bytes,
+                file_name=os.path.basename(output_file),
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
         else:
 
