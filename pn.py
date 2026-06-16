@@ -404,31 +404,10 @@ with pd.ExcelWriter(
 
 wb = load_workbook(output_file)
 
+# Move Summary sheet to first position
 if "Summary" in wb.sheetnames:
-
-    summary_ws = wb["Summary"]
-
-    for row in range(2, summary_ws.max_row + 1):
-
-        category_name = summary_ws.cell(
-            row=row,
-            column=1
-        ).value
-
-        if (
-            category_name is not None
-            and category_name in wb.sheetnames
-        ):
-
-            summary_ws.cell(
-                row=row,
-                column=1
-            ).hyperlink = f"#{category_name}!A1"
-
-            summary_ws.cell(
-                row=row,
-                column=1
-            ).style = "Hyperlink"
+    summary_sheet = wb["Summary"]
+    wb.move_sheet(summary_sheet, offset=-wb.index(summary_sheet))
 
 for sheet in wb.sheetnames:
 
@@ -457,8 +436,3 @@ for sheet in wb.sheetnames:
         ].width = adjusted_width
 
 wb.save(output_file)
-
-print("=" * 50)
-print("Automation completed successfully!")
-print(f"Output saved as: {output_file}")
-print("=" * 50)
