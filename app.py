@@ -6,32 +6,151 @@ import glob
 import pandas as pd
 
 st.set_page_config(
-    page_title="Jumbo Marketing Analytics Dashboard",
+    page_title="Jumbo Marketing Analytics",
     page_icon="📊",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
+# ── Global CSS ────────────────────────────────────────────────────────────────
+st.markdown("""<style>
+#MainMenu, header, footer {visibility: hidden;}
+
+section[data-testid="stSidebar"] {
+    background: #11131f;
+    border-right: 1px solid #1d1f35;
+}
+
+/* Styled native metric cards */
+div[data-testid="metric-container"] {
+    background: #161828;
+    border: 1px solid #252845;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+div[data-testid="metric-container"] label {
+    color: #6b7190 !important;
+    font-size: 0.72rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+div[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    color: #e8eaf6 !important;
+    font-size: 1.7rem !important;
+    font-weight: 700 !important;
+}
+
+/* Hero banner */
+.hero {
+    background: linear-gradient(135deg, #1a053a 0%, #0d1547 55%, #091a3d 100%);
+    border-radius: 14px;
+    padding: 1.8rem 2.2rem;
+    border: 1px solid #2a1f4a;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+.hero::after {
+    content: '📊';
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 5rem;
+    opacity: 0.07;
+}
+.hero h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.2rem 0;
+}
+.hero p {
+    color: #7880a8;
+    font-size: 0.84rem;
+    margin: 0 0 1rem 0;
+}
+.pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.pill {
+    padding: 0.28rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.pill-active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(99,102,241,0.45);
+}
+.pill-soon {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid #252a50;
+    color: #383d68;
+}
+
+/* Section labels */
+.section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #454870;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 1.4rem 0 0.6rem 0;
+}
+
+/* Top category bar */
+.top-cat-box {
+    background: #161828;
+    border-left: 3px solid #6366f1;
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    color: #a5b4fc;
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin: 0.8rem 0;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #3b4070;
+    border: 1.5px dashed #1d1f35;
+    border-radius: 12px;
+    background: #11131f;
+}
+.empty-state .icon { font-size: 2.5rem; }
+.empty-state p { margin: 0.5rem 0 0 0; font-size: 0.9rem; }
+</style>""", unsafe_allow_html=True)
+
+# ── Hero Header ───────────────────────────────────────────────────────────────
 st.markdown("""
-    <div style='text-align:center; padding: 1.2rem 0 0.4rem 0'>
-        <h1 style='font-size:2.2rem; margin-bottom:0'>📊 Jumbo Marketing Analytics Dashboard</h1>
-        <p style='color:#888; margin-top:0.3rem; font-size:0.95rem'>Created by Somya Mishra</p>
+<div class="hero">
+    <h1>Jumbo Marketing Analytics</h1>
+    <p>by Somya Mishra</p>
+    <div class="pills">
+        <span class="pill pill-active">🔔 Push Notifications</span>
+        <span class="pill pill-soon">📱 In-App &nbsp;· Soon</span>
+        <span class="pill pill-soon">💬 WhatsApp &nbsp;· Soon</span>
+        <span class="pill pill-soon">✉️ Email &nbsp;· Soon</span>
     </div>
+</div>
 """, unsafe_allow_html=True)
 
-st.divider()
-
-# ── Sidebar ──────────────────────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## ℹ️ How to Use")
+    st.markdown("### 📋 How to Use")
     st.markdown("""
 1. Upload your raw campaign `.xlsx` file
 2. Click **Run Automation**
-3. Review the summary metrics
+3. Review summary metrics
 4. Download the full report
     """)
     st.divider()
-    st.markdown("**Required Columns**")
-    st.markdown("""
+    with st.expander("Required Columns"):
+        st.markdown("""
 - Campaign Name / ID
 - Channel, Variant, Device
 - Title, Message
@@ -40,21 +159,23 @@ with st.sidebar:
 - Click through conversions
 - Control group metrics
 - Influenced Conversions / Revenue
-    """)
+        """)
     st.divider()
-    st.caption("Jumbo Marketing Analytics · Built with Streamlit")
+    st.caption("Push Notifications · v1.0")
 
 # ── Upload ────────────────────────────────────────────────────────────────────
+st.markdown('<p class="section-label">Upload</p>', unsafe_allow_html=True)
+
 uploaded_file = st.file_uploader(
-    "Upload Raw Campaign File",
+    "Upload",
     type=["xlsx"],
-    help="Export from your marketing platform"
+    label_visibility="collapsed"
 )
 
 if not uploaded_file:
     st.markdown("""
-        <div style='text-align:center; padding:3rem; color:#888'>
-            <div style='font-size:3rem'>📂</div>
+        <div class="empty-state">
+            <div class="icon">📂</div>
             <p>Upload a campaign Excel file to get started</p>
         </div>
     """, unsafe_allow_html=True)
@@ -62,9 +183,9 @@ if not uploaded_file:
 
 col_name, col_btn = st.columns([4, 1])
 with col_name:
-    st.success(f"✅ Uploaded: **{uploaded_file.name}**")
+    st.success(f"✅  {uploaded_file.name}")
 with col_btn:
-    run = st.button("▶ Run Automation", use_container_width=True, type="primary")
+    run = st.button("▶  Run", use_container_width=True, type="primary")
 
 uploaded_path = os.path.basename(uploaded_file.name)
 with open(uploaded_path, "wb") as f:
@@ -81,7 +202,7 @@ for pattern in ("*_Analysis.xlsx", "*_Analysis.csv"):
         except OSError:
             pass
 
-# ── Run script ────────────────────────────────────────────────────────────────
+# ── Run pn.py ─────────────────────────────────────────────────────────────────
 with st.spinner("Running analysis…"):
     result = subprocess.run(
         [sys.executable, "pn.py", uploaded_path],
@@ -90,7 +211,7 @@ with st.spinner("Running analysis…"):
     )
 
 if result.returncode != 0:
-    st.error("❌ Automation Failed")
+    st.error("❌  Automation Failed")
     st.code(result.stderr)
     st.stop()
 
@@ -105,34 +226,34 @@ if not os.path.exists(output_file):
     st.error(f"Output file not found: {output_file}")
     st.stop()
 
-st.success("✅ Report Generated Successfully")
+# ── Summary Metrics ───────────────────────────────────────────────────────────
+st.markdown('<p class="section-label">Campaign Summary</p>', unsafe_allow_html=True)
 
-# ── Metrics ───────────────────────────────────────────────────────────────────
 if os.path.exists(csv_file):
     df = pd.read_csv(csv_file)
 
-    st.markdown("### 📈 Campaign Summary")
-
-    total_campaigns = df["Campaign ID"].nunique()           if "Campaign ID"                    in df.columns else 0
-    total_sent      = int(df["Total Sent(users)"].sum())    if "Total Sent(users)"              in df.columns else 0
-    total_converted = int(df["Total Converted"].sum())      if "Total Converted"                in df.columns else 0
-    avg_ctr         = df["CTR%"].mean()                     if "CTR%"                           in df.columns else 0
-    avg_lift        = df["Relative Lift"].mean()            if "Relative Lift"                  in df.columns else 0
+    total_campaigns = df["Campaign ID"].nunique()        if "Campaign ID"       in df.columns else 0
+    total_sent      = int(df["Total Sent(users)"].sum()) if "Total Sent(users)" in df.columns else 0
+    total_converted = int(df["Total Converted"].sum())   if "Total Converted"   in df.columns else 0
+    avg_ctr         = df["CTR%"].mean()                  if "CTR%"              in df.columns else 0
+    avg_lift        = df["Relative Lift"].mean()         if "Relative Lift"     in df.columns else 0
 
     m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("Campaigns",       f"{total_campaigns:,}")
-    m2.metric("Total Sent",      f"{total_sent:,}")
-    m3.metric("Total Converted", f"{total_converted:,}")
-    m4.metric("Avg CTR",         f"{avg_ctr:.2f}%")
+    m1.metric("Campaigns",         f"{total_campaigns:,}")
+    m2.metric("Total Sent",        f"{total_sent:,}")
+    m3.metric("Total Converted",   f"{total_converted:,}")
+    m4.metric("Avg CTR",           f"{avg_ctr:.2f}%")
     m5.metric("Avg Relative Lift", f"{avg_lift:.1f}%")
 
     if "Category" in df.columns and "Total Converted" in df.columns:
-        top_category = (
+        top_cat = (
             df.groupby("Category")["Total Converted"]
-            .sum()
-            .idxmax()
+            .sum().idxmax()
         )
-        st.info(f"🏆 Top Category by Conversions: **{top_category}**")
+        st.markdown(
+            f'<div class="top-cat-box">🏆 Top Category by Conversions — <strong>{top_cat}</strong></div>',
+            unsafe_allow_html=True
+        )
 
     # ── Top Campaigns Table ───────────────────────────────────────────────────
     table_cols = [
@@ -143,7 +264,7 @@ if os.path.exists(csv_file):
     available = [c for c in table_cols if c in df.columns]
 
     if available:
-        st.markdown("### 🔝 Top 10 Campaigns by Conversions")
+        st.markdown('<p class="section-label">Top 10 Campaigns by Conversions</p>', unsafe_allow_html=True)
         sort_col = "Total Converted" if "Total Converted" in df.columns else available[0]
         top_df = (
             df[available]
@@ -153,14 +274,15 @@ if os.path.exists(csv_file):
         )
         top_df.index += 1
 
+        fmt = {}
+        if "CTR%"                    in top_df.columns: fmt["CTR%"]                    = "{:.2f}%"
+        if "TC%"                     in top_df.columns: fmt["TC%"]                     = "{:.2f}%"
+        if "Relative Lift"           in top_df.columns: fmt["Relative Lift"]           = "{:.1f}%"
+        if "Incremental Conversions" in top_df.columns: fmt["Incremental Conversions"] = "{:.1f}"
+        if "Total Converted"         in top_df.columns: fmt["Total Converted"]         = "{:,.0f}"
+
         st.dataframe(
-            top_df.style.format({
-                "CTR%":                   "{:.2f}%",
-                "TC%":                    "{:.2f}%",
-                "Relative Lift":          "{:.1f}%",
-                "Incremental Conversions":"{:.1f}",
-                "Total Converted":        "{:,.0f}",
-            }),
+            top_df.style.format(fmt),
             use_container_width=True
         )
 
@@ -171,7 +293,7 @@ with open(output_file, "rb") as f:
     report_bytes = f.read()
 
 st.download_button(
-    label="📥 Download Full Report",
+    label="📥  Download Full Report",
     data=report_bytes,
     file_name=os.path.basename(output_file),
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
