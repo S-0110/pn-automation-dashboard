@@ -75,23 +75,10 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     letter-spacing: -0.02em;
 }
 .hero-byline {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #6b7299;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    color: #7880a8;
+    font-size: 0.85rem;
+    font-weight: 400;
     margin: 0;
-}
-.byline-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    flex-shrink: 0;
 }
 .pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .pill {
@@ -107,9 +94,9 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     box-shadow: 0 0 12px rgba(99,102,241,0.45);
 }
 .pill-soon {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid #252a50;
-    color: #383d68;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #3a3f6a;
+    color: #7880a8;
 }
 
 .section-label {
@@ -149,10 +136,7 @@ st.markdown("""
 <div class="hero">
     <div style="margin-bottom:0.6rem">
         <h1>Jumbo Marketing Analytics</h1>
-        <p class="hero-byline">
-            <span class="byline-dot"></span>
-            Built by Somya Mishra
-        </p>
+        <p class="hero-byline">by Somya Mishra</p>
     </div>
     <div class="pills">
         <span class="pill pill-active">🔔 Push Notifications</span>
